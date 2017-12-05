@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>MSE/EME Test Suite</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+   
+    <style>
+        body {
+            background-color: black;
+            font-family: monospace;
+        }
+        .grid {
+            margin-top: 12px;
+        }
+        .grid_row {
+            display: -webkit-box;
+        }
+        .grid_element {
+            text-align: center;
+            line-height: 60px;
+            font-size: x-large;
+            border-radius: 20px;
+            width: 280px;
+            height: 60px;
+            margin: 8px;
+        }
+        .inactive {
+            color: gray;
+            border: 5px solid gray;
+        }
+        .inactive:focus {
+            color: white;
+            border: 5px solid white;
+        }
+        .active {
+            color: orange;
+            border: 5px solid orange;
+        }
+        video {
+            margin: auto;
+            display: block;
+            border-radius: 5px;
+            border: 5px solid gray;
+        }
+    </style> 
+    <script src="/js/mse-eme-test.js"></script>
+    <script src="/js/hasplayer-dev.js"></script>
+</head>
+<body>
+    <h1 style="color:orange;">MSE/EME Test Suite</h1>
+    <video id="player" width="640" height="400" controls></video>
+    <div id="grid" class="grid"></div>
+    <script>
+        (function(){
+            var test_streams = [
+                { name: "Azure Promo", format: "MS-SSTR", protection: "None", type: "VOD",
+                  url: "//amssamples.streaming.mediaservices.windows.net/91492735-c523-432b-ba01-faba6c2206a2/AzureMediaServicesPromo.ism/manifest" },
+                { name: "Super Speedway", format: "MS-SSTR", protection: "None", type: "VOD",
+                  url: "//playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest" },
+                { name: "Sintel Trailer", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
+                  url: "//amssamples.streaming.mediaservices.windows.net/bf657309-71d9-4436-b94b-8ac0d2ca222b/SintelTrailer.ism/manifest" },
+                { name: "Sintel Trailer", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
+                  url: "//amssamples.streaming.mediaservices.windows.net/bf657309-71d9-4436-b94b-8ac0d2ca222b/SintelTrailer.ism/manifest" },
+                { name: "Sintel Trailer", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
+                  url: "//amssamples.streaming.mediaservices.windows.net/bf657309-71d9-4436-b94b-8ac0d2ca222b/SintelTrailer.ism/manifest" },
+                { name: "Tears of Steel", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
+                  url: "//profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest" },
+            ];
+            var player = new MediaPlayer();
+            player.init(document.querySelector("#player"));
+
+            var controller = new GridController(document.querySelector("#grid"), test_streams, player);
+        })();
+    </script>
+</body>
+</html>
