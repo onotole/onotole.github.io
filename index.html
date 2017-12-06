@@ -40,10 +40,15 @@
             border: 5px solid orange;
         }
         video {
-            margin: auto;
-            display: block;
-            border-radius: 5px;
+            border-radius: 10px;
             border: 5px solid gray;
+        }
+        .pannel {
+            text-align: left;
+            font-size: x-large;
+            margin-left: 20px;
+            color: orange;
+            width: 270px;
         }
     </style> 
     <script src="/js/mse-eme-test.js"></script>
@@ -51,28 +56,34 @@
 </head>
 <body>
     <h1 style="color:orange;">MSE/EME Test Suite</h1>
-    <video id="player" width="640" height="400" controls></video>
+    <div id="wrapper" class="grid_row">
+        <div id="left" class="pannel"></div>
+        <video id="player" width="640" height="400" controls></video>
+        <div id="right" class="pannel"></div>
+    </div>
     <div id="grid" class="grid"></div>
     <script>
         (function(){
             var test_streams = [
-                { name: "Azure Promo", format: "MS-SSTR", protection: "None", type: "VOD",
+                { name: "Azure Promo", format: "MS-SSTR", protection: "Clear", type: "VOD",
                   url: "//amssamples.streaming.mediaservices.windows.net/91492735-c523-432b-ba01-faba6c2206a2/AzureMediaServicesPromo.ism/manifest" },
-                { name: "Super Speedway", format: "MS-SSTR", protection: "None", type: "VOD",
+                { name: "Super Speedway", format: "MS-SSTR", protection: "Clear", type: "VOD",
                   url: "//playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest" },
                 { name: "Sintel Trailer", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
                   url: "//amssamples.streaming.mediaservices.windows.net/bf657309-71d9-4436-b94b-8ac0d2ca222b/SintelTrailer.ism/manifest" },
-                { name: "Sintel Trailer", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
-                  url: "//amssamples.streaming.mediaservices.windows.net/bf657309-71d9-4436-b94b-8ac0d2ca222b/SintelTrailer.ism/manifest" },
-                { name: "Sintel Trailer", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
-                  url: "//amssamples.streaming.mediaservices.windows.net/bf657309-71d9-4436-b94b-8ac0d2ca222b/SintelTrailer.ism/manifest" },
+                { name: "Super Speedway", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
+                  url: "//playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest" },
+                { name: "To The Limit", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
+                  url: "//playready.directtaps.net/smoothstreaming/TTLSS720VC1PR/To_The_Limit_720.ism/Manifest" },
                 { name: "Tears of Steel", format: "MS-SSTR", protection: "PlayReady", type: "VOD",
                   url: "//profficialsite.origin.mediaservices.windows.net/c51358ea-9a5e-4322-8951-897d640fdfd7/tearsofsteel_4k.ism/manifest" },
+                { name: "Tears of Steel", format: "MS-SSTR", protection: "PlayReady", type: "LIVE",
+                  url: "//playready.directtaps.net/media/live/channel01.isml/Manifest" },
             ];
             var player = new MediaPlayer();
             player.init(document.querySelector("#player"));
 
-            var controller = new GridController(document.querySelector("#grid"), test_streams, player);
+            var controller = new GridController(test_streams, player);
         })();
     </script>
 </body>
