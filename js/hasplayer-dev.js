@@ -14,7 +14,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Last build : 2017-12-3_20:22:23 / git revision : cef04a2d */
+/* Last build : 2017-12-6_16:22:58 / git revision : 19231813 */
 
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -71,8 +71,8 @@ MediaPlayer = function () {
     ////////////////////////////////////////// PRIVATE ////////////////////////////////////////////
     var VERSION_DASHJS = '1.2.0',
         VERSION = '1.14.0-dev',
-        GIT_TAG = 'cef04a2d',
-        BUILD_DATE = '2017-12-3_20:22:23',
+        GIT_TAG = '19231813',
+        BUILD_DATE = '2017-12-6_16:22:58',
         context = new MediaPlayer.di.Context(), // default context
         system = new dijon.System(), // dijon system instance
         initialized = false,
@@ -20967,8 +20967,8 @@ MediaPlayer.dependencies.ProtectionController = function() {
 
             this.keySystem = undefined;
 
+            this.protectionModel.teardown();
             this.setMediaElement(null).then(function() {
-                self.protectionModel.teardown();
                 self.protectionModel = undefined;
             });
         },
@@ -22059,7 +22059,10 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
         closeKeySession: function(sessionToken) {
             // Send our request to the CDM
-            videoElement[api.cancelKeyRequest](this.keySystem.systemString, sessionToken.sessionID);
+            try {
+                // We might get INVALID_STATE exception if there are no outstanding requests - just ignore it
+                videoElement[api.cancelKeyRequest](this.keySystem.systemString, sessionToken.sessionID);
+            } catch (e) {}
         },
 
         setServerCertificate: function(/*serverCertificate*/) { /* Not supported */ },

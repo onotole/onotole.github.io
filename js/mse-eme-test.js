@@ -21,6 +21,7 @@ GridController = function(streams, player) {
     function _update_stream_info(idx) {
         var s = _streams[idx];
         _stream_info.innerHTML = "";
+        _stream_info.style.color = idx === _active ? "orange" : "white";
         function add_attribute(attr) {
             var p = document.createElement("p");
             p.innerHTML = attr + ": " + s[attr];
@@ -45,9 +46,9 @@ GridController = function(streams, player) {
         if (idx === _active) return;
         try {  _element(_active).className = "grid_element inactive"; } catch (e) {};
         _active = idx;
+        _update_stream_info(idx);
         _element(_active).className = "grid_element active";
         _player.load({url: _streams[_active].url});
-        _player.play();
     };
 
     function _focus(row, col) {
