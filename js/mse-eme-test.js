@@ -5,7 +5,17 @@ GridController = function(streams, player) {
         _rows = Math.floor(_streams.length / COLUMNS) + (_streams.length % COLUMNS ? 1 : 0),
         _grid = document.getElementById("grid"),
         _stream_info = document.getElementById("left"),
-        _video_info = document.getElementById("right");
+        _video_info = document.getElementById("right"),
+        _player_state = "stopped";
+
+    _player.addEventListener("error", function(evt) {
+    });
+    _player.addEventListener("warning", function(evt) {
+    });
+    _player.addEventListener("state_changed", function(evt) {
+        if (evt.detail.type === "video")
+            _player_state = evt.detail.state;
+    });
 
     const KEY_OK            = 13;
     const KEY_BACK          = 27;
@@ -13,9 +23,9 @@ GridController = function(streams, player) {
     const KEY_RIGHT         = 39;
     const KEY_UP            = 38;
     const KEY_DOWN          = 40;
-    const KEY_REWIND        = 227;
-    const KEY_FASTFORWARD   = 228;
-    const KEY_PLAY          = 179;
+    const KEY_REWIND        = 112;
+    const KEY_FASTFORWARD   = 114;
+    const KEY_PLAY          = 113;
     const KEY_INFO          = 116;
 
     function _update_stream_info(idx) {
@@ -79,6 +89,19 @@ GridController = function(streams, player) {
         _focus(row, col);
     };
 
+    function _rewind() {
+        _player.seek(_player.getPosition() - 10);
+    };
+
+    function _fast_forward() {
+        _player.seek(_player.getPosition() + 10);
+    };
+
+    function _toggle_play() {
+       if (_player_state === "playing") _player.pause();
+       else _player.play();
+    };
+
     function _keypress(idx, key) { 
         switch (key) {
             case KEY_OK: _activate(idx); break;
@@ -86,9 +109,14 @@ GridController = function(streams, player) {
             case KEY_RIGHT: _right(idx); break;
             case KEY_UP: _up(idx); break;
             case KEY_DOWN: _down(idx); break;
+            case KEY_PLAY: _toggle_play(); break;
+            case KEY_REWIND: _rewind(); break;
+            case KEY_FASTFORWARD: _fast_forward(); break;
+            case KEY_PLAY: _toggle_play(); break;
+            case KEY_INFO: break;
         }
     };
-   
+
     var idx = 0, row;
     _streams.forEach(function(str) {
         if (!(idx % COLUMNS)) {
@@ -115,12 +143,5 @@ GridController = function(streams, player) {
         _focus(0);
     } catch (e) {};
 
-    function _filter(f) {
-    };
-    
-    return {
-	filter: function(f) {
-            _filter.call(this);
-        }
-    };
+    return {};
 };
