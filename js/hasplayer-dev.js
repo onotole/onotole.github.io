@@ -27435,13 +27435,16 @@ Mss.dependencies.MssParser = function() {
 
             // Parse <WRMHeader> to get KID field value
             xmlReader = (new DOMParser()).parseFromString(wrmHeader, "application/xml");
-            KID = xmlReader.querySelector("KID").textContent;
+            var kidNode = xmlReader.querySelector("KID");
+            if (kidNode) {
+                KID = kidNode.textContent;
 
-            // Get KID (base64 decoded) as byte array
-            KID = BASE64.decodeArray(KID);
+                // Get KID (base64 decoded) as byte array
+                KID = BASE64.decodeArray(KID);
 
-            // Convert UUID from little-endian to big-endian
-            convertUuidEndianness(KID);
+                // Convert UUID from little-endian to big-endian
+                convertUuidEndianness(KID);
+             }
 
             return KID;
         },
