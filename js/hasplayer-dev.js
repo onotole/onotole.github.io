@@ -27216,7 +27216,7 @@ Mss.dependencies.MssParser = function() {
             // Check if codec is supported
             if (SUPPORTED_CODECS.indexOf(fourCCValue.toUpperCase()) === -1) {
                 // Do not send warning
-                //this.errHandler.sendWarning(MediaPlayer.dependencies.ErrorHandler.prototype.MEDIA_ERR_CODEC_UNSUPPORTED, "Codec/FourCC not supported", {codec: fourCCValue});
+                this.errHandler.sendWarning(MediaPlayer.dependencies.ErrorHandler.prototype.MEDIA_ERR_CODEC_UNSUPPORTED, "Codec/FourCC not supported", {codec: fourCCValue});
                 this.debug.warn("[MssParser] Codec not supported: " + fourCCValue);
                 return null;
             }
@@ -27767,6 +27767,7 @@ Mss.dependencies.MssParser = function() {
 Mss.dependencies.MssParser.prototype = {
     constructor: Mss.dependencies.MssParser
 };
+
 /*
  * The copyright in this software module is being made available under the BSD License, included below. This software module may be subject to other third party and/or contributor rights, including patent rights, and no such rights are granted under this license.
  * The whole software resulting from the execution of this software module together with its external dependent software modules from dash.js project may be subject to Orange and/or other third party rights, including patent rights, and no such rights are granted under this license.

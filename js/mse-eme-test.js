@@ -5,16 +5,45 @@ GridController = function(streams, player) {
         _rows = Math.floor(_streams.length / COLUMNS) + (_streams.length % COLUMNS ? 1 : 0),
         _grid = document.getElementById("grid"),
         _stream_info = document.getElementById("left"),
-        _video_info = document.getElementById("right"),
-        _player_state = "stopped";
+        _playback_info = document.getElementById("right"),
+        _player_state = "stopped",
+        _errors = []; // { t: "(warn | err)", m: "Error message", d: "{"extra": "info"}" }
+
+     _stream_info.style.marginTop = "50px";
+
+    function _update_playback_info() {
+        _playback_info.innerHTML = "";
+        _playback_info.style.color = "white";
+        var p = document.createElement("p");
+        p.innerHTML = "state: " + _player_state;
+        _playback_info.appendChild(p);
+        p = document.createElement("p");
+        p.innerHTML = "=======================";
+        _playback_info.appendChild(p);
+        for (var e in _errors) {
+           p = document.createElement("p");
+           p.style.color = _errors[e].t === "warn" ? "orange" : "red";
+           p.style.marginTop = p.style.marginBottom = "0px";
+           p.style.fontSize = "small";
+           p.innerHTML = _errors[e].m;
+           if (_errors[e].d)
+               p.innerHTML += " " + JSON.stringify(_errors[e].d);
+           _playback_info.appendChild(p);
+        }
+    };
 
     _player.addEventListener("error", function(evt) {
+        _errors.push({ t: "err", m: evt.data.message, d: evt.data.data });
+        _update_playback_info();
     });
     _player.addEventListener("warning", function(evt) {
+        _errors.push({ t: "warn", m: evt.data.message, d: evt.data.data });
+        _update_playback_info();
     });
     _player.addEventListener("state_changed", function(evt) {
         if (evt.detail.type === "video")
             _player_state = evt.detail.state;
+        _update_playback_info();
     });
 
     const KEY_OK            = 13;
@@ -58,7 +87,10 @@ GridController = function(streams, player) {
         _active = idx;
         _update_stream_info(idx);
         _element(_active).className = "grid_element active";
+        _player_state = "stopped";
         _player.load({url: _streams[_active].url});
+        _errors.length = 0;
+        _update_playback_info();
     };
 
     function _focus(row, col) {
