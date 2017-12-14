@@ -3,6 +3,7 @@ GridController = function(streams, player) {
 
     var _streams = streams, _player = player, _active = undefined,
         _rows = Math.floor(_streams.length / COLUMNS) + (_streams.length % COLUMNS ? 1 : 0),
+        _last_row = _streams.length % COLUMNS ? _stream.length % COLUMNS : COLUMNS;
         _grid = document.getElementById("grid"),
         _stream_info = document.getElementById("left"),
         _playback_info = document.getElementById("right"),
@@ -78,7 +79,7 @@ GridController = function(streams, player) {
     };
 
     function _columns(row) {
-        return row == _rows - 1 ? _streams.length % COLUMNS : COLUMNS;
+        return row == _rows - 1 ? _last_row : COLUMNS;
     };
 
     function _activate(idx) {

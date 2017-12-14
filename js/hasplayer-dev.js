@@ -14,7 +14,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Last build : 2017-12-6_16:26:4 / git revision : 017c99b5 */
+/* Last build : 2017-12-14_11:35:40 / git revision : 078933ed */
 
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -71,8 +71,8 @@ MediaPlayer = function () {
     ////////////////////////////////////////// PRIVATE ////////////////////////////////////////////
     var VERSION_DASHJS = '1.2.0',
         VERSION = '1.14.0-dev',
-        GIT_TAG = '017c99b5',
-        BUILD_DATE = '2017-12-6_16:26:4',
+        GIT_TAG = '078933ed',
+        BUILD_DATE = '2017-12-14_11:35:40',
         context = new MediaPlayer.di.Context(), // default context
         system = new dijon.System(), // dijon system instance
         initialized = false,
@@ -9121,9 +9121,7 @@ MediaPlayer.dependencies.Stream = function() {
             if (tmSpeed !== 1) {
                 this.setTrickModeSpeed(1);
             } else {
-                // Set the currentTime here to be sure that videoTag is ready to accept the seek (cause IE fail on set currentTime on BufferUpdate)
                 if (playStartTime >= 0) {
-                    setVideoModelCurrentTime.call(this, playStartTime);
                     playStartTime = -1;
                 } else {
                     startBuffering.call(this);
@@ -9557,7 +9555,6 @@ MediaPlayer.dependencies.Stream = function() {
             if (this.manifestExt.getIsStartOver(manifest)) {
                 startFragmentInfoControllers.call(this);
             }
-            
             play.call(this);
         },
 
@@ -10272,7 +10269,7 @@ MediaPlayer.dependencies.StreamController = function() {
                 currentTime = videoElement.currentTime,
                 playBackQuality = self.videoExt.getPlaybackQuality(videoElement);
 
-            // playBackQuality might be null
+            // playBackQuality may be null
             if (playBackQuality)
                 self.metricsModel.addPlaybackQuality("video", time, playBackQuality, currentTime);
             self.metricsModel.addVideoResolution("video", time, videoElement.videoWidth, videoElement.videoHeight, currentTime);
