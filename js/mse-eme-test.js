@@ -8,6 +8,7 @@ GridController = function(streams, player) {
         _stream_info = document.getElementById("left"),
         _playback_info = document.getElementById("right"),
         _player_state = "stopped",
+        _video_width = 0, _video_height = 0, _video_bitrate = 0,
         _errors = []; // { t: "(warn | err)", m: "Error message", d: "{"extra": "info"}" }
 
      _stream_info.style.marginTop = "50px";
@@ -15,21 +16,25 @@ GridController = function(streams, player) {
     function _update_playback_info() {
         _playback_info.innerHTML = "";
         _playback_info.style.color = "white";
-        var p = document.createElement("p");
-        p.innerHTML = "state: " + _player_state;
-        _playback_info.appendChild(p);
-        p = document.createElement("p");
-        p.innerHTML = "=======================";
-        _playback_info.appendChild(p);
+        function add_info_line(info) {
+            var p = document.createElement("p");
+            p.style.marginTop = p.style.marginBottom = "0px";
+            p.style.fontSize = "medium";
+            p.innerHTML = info;
+            _playback_info.appendChild(p);
+        }
+        add_info_line("state: " + _player_state);
+        add_info_line("quality: " + _video_width + "x" + _video_height + " @ " + _video_bitrate);
+        add_info_line("==============================");
         for (var e in _errors) {
-           p = document.createElement("p");
-           p.style.color = _errors[e].t === "warn" ? "orange" : "red";
-           p.style.marginTop = p.style.marginBottom = "0px";
-           p.style.fontSize = "small";
-           p.innerHTML = _errors[e].m;
-           if (_errors[e].d)
-               p.innerHTML += " " + JSON.stringify(_errors[e].d);
-           _playback_info.appendChild(p);
+            var p = document.createElement("p");
+            p.style.color = _errors[e].t === "warn" ? "orange" : "red";
+            p.style.marginTop = p.style.marginBottom = "0px";
+            p.style.fontSize = "small";
+            p.innerHTML = _errors[e].m;
+            if (_errors[e].d)
+                p.innerHTML += " " + JSON.stringify(_errors[e].d);
+            _playback_info.appendChild(p);
         }
     };
 
@@ -44,6 +49,18 @@ GridController = function(streams, player) {
     _player.addEventListener("state_changed", function(evt) {
         if (evt.detail.type === "video")
             _player_state = evt.detail.state;
+        _update_playback_info();
+    });
+    _player.addEventListener("play_bitrate", function(evt) {
+        const _K = 1024;
+        const _M = _K*_K;
+        if (evt.detail.type === "video") {
+            _video_width = evt.detail.width;
+            _video_height = evt.detail.height;
+            _video_bitrate = evt.detail.bitrate;
+            if (_video_bitrate >= _M) _video_bitrate = (_video_bitrate / _M).toFixed(3) + "M";
+            else if (_video_bitrate >= _K) _video_bitrate = (_video_bitrate / _K).toFixed(3) + "K";
+        }
         _update_playback_info();
     });
 
@@ -91,6 +108,7 @@ GridController = function(streams, player) {
         _player_state = "stopped";
         _player.load({url: _streams[_active].url});
         _errors.length = 0;
+        _video_width = _video_height = _video_bitrate = 0;
         _update_playback_info();
     };
 
