@@ -20,11 +20,11 @@
         }
         .grid_element {
             text-align: center;
-            line-height: 60px;
+            line-height: 48px;
             font-size: x-large;
             border-radius: 20px;
             width: 280px;
-            height: 60px;
+            height: 48px;
             margin: 8px;
         }
         .inactive {
@@ -80,6 +80,10 @@
                   url: "//playready.directtaps.net/media/live/channel01.isml/Manifest" },
                 { name: "XBox One", format: "MS-SSTR", protection: "PlayReady", type: "LIVE",
                   url: "//profficialsite.origin.mediaservices.windows.net/9cc5e871-68ec-42c2-9fc7-fda95521f17d/dayoneplayready.ism/manifest" },
+                { name: "MS Azure MS #1", format: "MS-SSTR", protection: "Clear", type: "LIVE",
+                  url: "//b028.wpc.azureedge.net/80B028/Samples/a38e6323-95e9-4f1f-9b38-75eba91704e4/5f2ce531-d508-49fb-8152-647eba422aec.ism/Manifest" },
+                { name: "MS Azure MS #2", format: "MS-SSTR", protection: "PlayReady", type: "LIVE",
+                  url: "//b028.wpc.azureedge.net/80B028/Samples/859b335f-eebc-4ff1-ac03-98e9b614e2c1/0cc164eb-193e-48cb-bc6b-041cc28307e4.ism/Manifest" },
             ];
             var player = new MediaPlayer();
             player.init(document.querySelector("#player"));
