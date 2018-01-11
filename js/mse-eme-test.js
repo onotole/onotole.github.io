@@ -1,7 +1,80 @@
-GridController = function(streams, player) {
+VideoTagAdapter = function(tag) {
+
+    var _tag = tag,
+        _event_map = {};
+
+    try{ _tag.src = null; _tag.load(); } catch(e) {};
+
+    _tag.addEventListener("error", function(evt){
+         console.log("Error: " + evt);
+    }, false);
+
+    _tag.addEventListener("playing", function(){
+         if (_event_map["state_changed"]) {
+             _event_map["state_changed"]({detail: {type: "video", state: "playing"}});
+         }
+    }, false);
+
+    _tag.addEventListener("pause", function(){
+         if (_event_map["state_changed"]) {
+             _event_map["state_changed"]({detail: {type: "video", state: "paused"}});
+         }
+    }, false);
+
+    _tag.addEventListener("seeking", function(){
+         if (_event_map["state_changed"]) {
+             _event_map["state_changed"]({detail: {type: "video", state: "seeking"}});
+         }
+    }, false);
+
+    _tag.addEventListener("ended", function(){
+         if (_event_map["state_changed"]) {
+             _event_map["state_changed"]({detail: {type: "video", state: "stopped"}});
+         }
+    }, false);
+
+    return {
+        load: function(stream) {
+            while(_tag.firstChild) { _tag.removeChild(_tag.firstChild); };
+            var src = document.createElement("source");
+            src.src = stream.url;
+            switch (stream.format) {
+                case "MS-SSTR": src.type = "application/vnd.ms-sstr+xml"; break;
+                case "MPEG-Dash": src.type = "application/dash+xml"; break;
+            }
+            _tag.appendChild(src);
+            _tag.load();
+            _tag.play();
+        },
+        stop: function() {
+            _tag.src = null;
+            _tag.load();
+        },
+        play: function() {
+            _tag.play();
+        },
+        pause: function() {
+            _tag.pause();
+        },
+        seek: function(pos) {
+            _tag.currentTime = pos;
+        },
+        getPosition: function() {
+            return _tag.currentTime;
+        },
+        addEventListener: function(evt, handler) {
+            _event_map[evt] = handler;
+        },
+    };
+};
+
+GridController = function(streams, tag) {
     const COLUMNS = 4;
 
-    var _streams = streams, _player = player, _active = undefined,
+    var _tag = tag,
+        _streams = streams,
+        _player = new MediaPlayer,
+        _active = undefined,
         _rows = Math.floor(_streams.length / COLUMNS) + (_streams.length % COLUMNS ? 1 : 0),
         _last_row = _streams.length % COLUMNS ? _streams.length % COLUMNS : COLUMNS;
         _grid = document.getElementById("grid"),
@@ -9,7 +82,11 @@ GridController = function(streams, player) {
         _playback_info = document.getElementById("right"),
         _player_state = "stopped",
         _video_width = 0, _video_height = 0, _video_bitrate = 0,
-        _errors = []; // { t: "(warn | err)", m: "Error message", d: "{"extra": "info"}" }
+        _errors = [], // { t: "(warn | err)", m: "Error message", d: "{"extra": "info"}" }
+        _streaming_mode = "MSE/EME",
+        _title = document.getElementById("title");
+    
+     _player.init(_tag);
 
      _stream_info.style.marginTop = "50px";
 
@@ -38,31 +115,33 @@ GridController = function(streams, player) {
         }
     };
 
-    _player.addEventListener("error", function(evt) {
-        _errors.push({ t: "err", m: evt.data.message, d: evt.data.data });
-        _update_playback_info();
-    });
-    _player.addEventListener("warning", function(evt) {
-        _errors.push({ t: "warn", m: evt.data.message, d: evt.data.data });
-        _update_playback_info();
-    });
-    _player.addEventListener("state_changed", function(evt) {
-        if (evt.detail.type === "video")
-            _player_state = evt.detail.state;
-        _update_playback_info();
-    });
-    _player.addEventListener("play_bitrate", function(evt) {
-        const _K = 1024;
-        const _M = _K*_K;
-        if (evt.detail.type === "video") {
-            _video_width = evt.detail.width;
-            _video_height = evt.detail.height;
-            _video_bitrate = evt.detail.bitrate;
-            if (_video_bitrate >= _M) _video_bitrate = (_video_bitrate / _M).toFixed(3) + "M";
-            else if (_video_bitrate >= _K) _video_bitrate = (_video_bitrate / _K).toFixed(3) + "K";
-        }
-        _update_playback_info();
-    });
+    function _subscribe_events() {
+        _player.addEventListener("error", function(evt) {
+            _errors.push({ t: "err", m: evt.data.message, d: evt.data.data });
+            _update_playback_info();
+        });
+        _player.addEventListener("warning", function(evt) {
+            _errors.push({ t: "warn", m: evt.data.message, d: evt.data.data });
+            _update_playback_info();
+        });
+        _player.addEventListener("state_changed", function(evt) {
+            if (evt.detail.type === "video")
+                _player_state = evt.detail.state;
+            _update_playback_info();
+        });
+        _player.addEventListener("play_bitrate", function(evt) {
+            const _K = 1024;
+            const _M = _K*_K;
+            if (evt.detail.type === "video") {
+                _video_width = evt.detail.width;
+                _video_height = evt.detail.height;
+                _video_bitrate = evt.detail.bitrate;
+                if (_video_bitrate >= _M) _video_bitrate = (_video_bitrate / _M).toFixed(3) + "M";
+                else if (_video_bitrate >= _K) _video_bitrate = (_video_bitrate / _K).toFixed(3) + "K";
+            }
+            _update_playback_info();
+        });
+    }
 
     const KEY_OK            = 13;
     const KEY_BACK          = 27;
@@ -101,12 +180,12 @@ GridController = function(streams, player) {
 
     function _activate(idx) {
         if (idx === _active) return;
-        try {  _element(_active).className = "grid_element inactive"; } catch (e) {};
+        try { _element(_active).className = "grid_element inactive"; } catch (e) {};
         _active = idx;
         _update_stream_info(idx);
         _element(_active).className = "grid_element active";
         _player_state = "stopped";
-        _player.load({url: _streams[_active].url});
+        _player.load({url: _streams[_active].url, format: _streams[_active].format});
         //_player.load({url: _streams[_active].url, protData: {"com.microsoft.playready": {cdmData: "DEADBEEF"}}});
         _errors.length = 0;
         _video_width = _video_height = _video_bitrate = 0;
@@ -154,6 +233,24 @@ GridController = function(streams, player) {
        else _player.play();
     };
 
+    function _toggle_streaming_mode() {
+        if (_streaming_mode == "MSE/EME")
+            _streaming_mode = "Native";
+        else
+            _streaming_mode = "MSE/EME";
+        _title.innerHTML = "*[" + _streaming_mode + "] Streaming Test Suite";
+        try {_player.stop();} catch(e) {};
+        if (_streaming_mode == "MSE/EME") {
+            _player = new MediaPlayer;
+            _player.init(_tag);
+            _subscribe_events();
+        } else {
+            _player = new VideoTagAdapter(_tag);
+            _subscribe_events();
+        }
+        _activate(-1);
+    };
+
     function _keypress(idx, key) { 
         switch (key) {
             case KEY_OK: _activate(idx); break;
@@ -165,7 +262,7 @@ GridController = function(streams, player) {
             case KEY_REWIND: _rewind(); break;
             case KEY_FASTFORWARD: _fast_forward(); break;
             case KEY_PLAY: _toggle_play(); break;
-            case KEY_INFO: break;
+            case KEY_INFO: _toggle_streaming_mode(); break;
         }
     };
 
@@ -191,6 +288,7 @@ GridController = function(streams, player) {
     });
 
     try {
+        _subscribe_events();
     	_grid.appendChild(row);
         _focus(0);
     } catch (e) {};

@@ -48,13 +48,17 @@
             font-size: x-large;
             margin-left: 20px;
             width: 270px;
+            height: 360px;
+            overflow: hidden;
+            word-break: break-all;
+            word-break: break-word;
         }
     </style> 
     <script src="/js/mse-eme-test.js"></script>
     <script src="/js/hasplayer-dev.js"></script>
 </head>
 <body>
-    <h1 style="color:orange;">MSE/EME Test Suite</h1>
+    <h1 id="title" style="color:orange;">*[MSE/EME] Streaming Test Suite</h1>
     <div id="wrapper" class="grid_row">
         <div id="left" class="pannel"></div>
         <video id="player" width="640" height="400" controls></video>
@@ -84,11 +88,14 @@
                   url: "//b028.wpc.azureedge.net/80B028/Samples/a38e6323-95e9-4f1f-9b38-75eba91704e4/5f2ce531-d508-49fb-8152-647eba422aec.ism/Manifest" },
                 { name: "MS Azure MS #2", format: "MS-SSTR", protection: "PlayReady", type: "LIVE",
                   url: "//b028.wpc.azureedge.net/80B028/Samples/859b335f-eebc-4ff1-ac03-98e9b614e2c1/0cc164eb-193e-48cb-bc6b-041cc28307e4.ism/Manifest" },
+                { name: "Big Buck Bunny", format: "MPEG-Dash", protection: "Clear", type: "VOD",
+                  url: "//amssamples.streaming.mediaservices.windows.net/683f7e47-bd83-4427-b0a3-26a6c4547782/BigBuckBunny.ism/manifest(format=mpd-time-csf)" },
+                { name: "MS Azure MS #3", format: "MPEG-Dash", protection: "Clear", type: "LIVE",
+                  url: "//b028.wpc.azureedge.net/80B028/Samples/a38e6323-95e9-4f1f-9b38-75eba91704e4/5f2ce531-d508-49fb-8152-647eba422aec.ism/Manifest(format=mpd-time-csf)" },
             ];
-            var player = new MediaPlayer();
-            player.init(document.querySelector("#player"));
-
-            var controller = new GridController(test_streams, player);
+            
+            var video_tag = document.querySelector("#player");
+            var controller = new GridController(test_streams, video_tag);
         })();
     </script>
 </body>
