@@ -70,6 +70,7 @@ VideoTagAdapter = function(tag) {
 
 GridController = function(streams, tag) {
     const COLUMNS = 4;
+    const DEBUG = false;
 
     var _tag = tag,
         _streams = streams,
@@ -86,7 +87,9 @@ GridController = function(streams, tag) {
         _streaming_mode = "MSE/EME",
         _title = document.getElementById("title");
     
+     
      _player.init(_tag);
+     _player.setDebug(DEBUG);
 
      _stream_info.style.marginTop = "50px";
 
@@ -243,6 +246,7 @@ GridController = function(streams, tag) {
         if (_streaming_mode == "MSE/EME") {
             _player = new MediaPlayer;
             _player.init(_tag);
+            _player.setDebug(DEBUG);
             _subscribe_events();
         } else {
             _player = new VideoTagAdapter(_tag);
