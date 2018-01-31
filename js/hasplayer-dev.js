@@ -14,7 +14,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Last build : 2018-1-23_13:2:2 / git revision : 293866f1 */
+/* Last build : 2018-1-23_13:53:47 / git revision : da40c21b */
 
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -71,8 +71,8 @@ MediaPlayer = function () {
     ////////////////////////////////////////// PRIVATE ////////////////////////////////////////////
     var VERSION_DASHJS = '1.2.0',
         VERSION = '1.14.0-dev',
-        GIT_TAG = '293866f1',
-        BUILD_DATE = '2018-1-23_13:2:2',
+        GIT_TAG = 'da40c21b',
+        BUILD_DATE = '2018-1-23_13:53:47',
         context = new MediaPlayer.di.Context(), // default context
         system = new dijon.System(), // dijon system instance
         initialized = false,
@@ -18060,7 +18060,7 @@ Dash.dependencies.DashParser = function () {
             var template = {};
             setAttributeIfExists(node, template, "initialization");
             setAttributeIfExists(node, template, "media");
-            setAttributeIfExists(node, template, "presentationTimeOffset", parseFloat);
+            // setAttributeIfExists(node, template, "presentationTimeOffset", parseFloat);
             setAttributeIfExists(node, template, "timescale", parseFloat);
             for (var c = 0; c < node.childNodes.length; ++c) {
                 var child = node.childNodes[c];
