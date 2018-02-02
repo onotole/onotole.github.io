@@ -69,7 +69,7 @@ VideoTagAdapter = function(tag) {
 };
 
 GridController = function(streams, tag) {
-    const COLUMNS = 4;
+    const COLUMNS = 5;
     const DEBUG = false;
 
     var _tag = tag,
