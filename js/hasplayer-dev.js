@@ -14,7 +14,7 @@
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Last build : 2018-2-2_13:21:1 / git revision : ea8beb63 */
+/* Last build : 2018-2-5_15:9:44 / git revision : f701cb4d */
 
 (function(root, factory) {
     if (typeof define === 'function' && define.amd) {
@@ -71,8 +71,8 @@ MediaPlayer = function () {
     ////////////////////////////////////////// PRIVATE ////////////////////////////////////////////
     var VERSION_DASHJS = '1.2.0',
         VERSION = '1.14.0-dev',
-        GIT_TAG = 'ea8beb63',
-        BUILD_DATE = '2018-2-2_13:21:1',
+        GIT_TAG = 'f701cb4d',
+        BUILD_DATE = '2018-2-5_15:9:44',
         context = new MediaPlayer.di.Context(), // default context
         system = new dijon.System(), // dijon system instance
         initialized = false,
@@ -18076,6 +18076,25 @@ Dash.dependencies.DashParser = function () {
             return template;
         },
 
+        parseInitialization = function(node) {
+            var init = {};
+            setAttributeIfExists(node, init, "range");
+            return init;
+        },
+
+        parseSegmentBase = function(node) {
+            var base = {};
+            setAttributeIfExists(node, base, "indexRange");
+            for (var c = 0; c < node.childNodes.length; ++c) {
+                var child = node.childNodes[c];
+                if (child.tagName === "Initialization") {
+                    base.Initialization = parseInitialization(child);
+                    base.Initialization_asArray = [base.Initialization];
+                }
+            }
+            return base;
+        },
+
         parseRepresentation = function(node, mimeType, baseUrl, profiles, codecs) {
             var representation = {};
             setAttributeIfExists(node, representation, "bandwidth", parseFloat);
@@ -18085,6 +18104,18 @@ Dash.dependencies.DashParser = function () {
             setAttributeIfExists(node, representation, "id");
             setAttributeIfExists(node, representation, "mimeType");
             setAttributeIfExists(node, representation, "BaseURL");
+            for (var c = 0; c < node.childNodes.length; ++c) {
+                var child = node.childNodes[c];
+                switch (child.tagName) {
+                    case "BaseURL":
+                        representation.BaseURL = parseBaseURL(child);
+                        break;
+                    case "SegmentBase":
+                        representation.SegmentBase = parseSegmentBase(child);
+                        representation.SegmentBase_asArray = [representation.SegmentBase];
+                        break;
+                }
+            }
             representation.BaseURL = baseUrl + (representation.BaseURL ? representation.BaseURL : "");
             if (!representation.hasOwnProperty("mimeType"))
                 representation.mimeType = mimeType;
@@ -18172,8 +18203,10 @@ Dash.dependencies.DashParser = function () {
             }
             adaptation.ContentProtection_asArray = adaptation.ContentProtection;
             adaptation.Representation_asArray = adaptation.Representation;
-            for (var r = 0; r < adaptation.Representation.length; ++r)
-                adaptation.Representation[r].SegmentTemplate = adaptation.SegmentTemplate;
+            if (adaptation.SegmentTemplate) {
+                for (var r = 0; r < adaptation.Representation.length; ++r)
+                    adaptation.Representation[r].SegmentTemplate = adaptation.SegmentTemplate;
+            }
             return adaptation;
         },
 
@@ -20956,6 +20989,33 @@ MediaPlayer.dependencies.ProtectionController = function() {
                     }
                 }
                 try {
+                    // custom data can be provided as:
+                    // 1) cdmData parameter of protData object;
+                    // 2) embedded into laURL with '%%%' separator, like http://la.server.com/acquire%%%CUSTOM_DATA
+                    // 3) as 'cd' laURL parameter, like http://la.server.com/acquire?cd=CUSTOM_DATA
+                    if (!cdmData) {
+                        var protData = getProtData(this.keySystem);
+                        var getCustomData = function(laurl) {
+                            var tokens = laurl.split("%%%");
+                            if (tokens.length > 1) {
+                                laurl = tokens[0];
+                                return tokens[1];
+                            }
+                            tokens = laurl.split("?");
+                            if (tokens.length > 1) {
+                                tokens = tokens[1].split("&");
+                                for (var t = 0; t < tokens.length; ++t) {
+                                    var kvp = tokens[t].split("=");
+                                    if (kvp.length === 2 && kvp[0] === "cd")
+                                        return kvp[1];
+                                }
+                            }
+                            return null;
+                        };
+                        if (protData && protData.laURL) {
+                            cdmData = getCustomData(protData.laURL);
+                        }
+                    }
                     this.protectionModel.createKeySession(initDataForKS, this.keySystem.sessionType, cdmData);
                 } catch (ex) {
                     this.notify(MediaPlayer.models.ProtectionModel.eventList.ENAME_KEY_SESSION_CREATED, null, {
@@ -21673,14 +21733,55 @@ MediaPlayer.models.ProtectionModel_01b = function () {
                                 new MediaPlayer.vo.protection.NeedKey(initData, "cenc"));
                             // FIXME: this one is the obvious shortcut - should we delegate this to controller?
                             if (!keyRequestSent) {
-                                var extraData = new Uint8Array(initData);
+                                // Expected initData as ArrayBuffer and customData as String;
+                                // returns ArrayBuffer
+                                var embedCustomData = function(initData, customData) {
+                                    if (!customData || !customData.length)
+                                        return initData;
+
+                                    var dLen = customData.length + 4,
+                                        psshBox = new ArrayBuffer(initData.byteLength + dLen),
+                                        vInit = new DataView(initData),
+                                        vBox = new DataView(psshBox),
+                                        ptr = 0;
+                                    // copy original initData
+                                    for (var b = 0; b < initData.byteLength; ++b)
+                                        vBox.setUint8(b, vInit.getUint8(b));
+                                    // update pssh box size
+                                    vBox.setUint32(ptr, vBox.getUint32(ptr) + dLen); ptr += 4;
+                                    // skip box type "pssh"
+                                    ptr += 4;
+                                    // get pssh flags
+                                    var psshFlags = vBox.getUint32(ptr); ptr += 4;
+                                    // skip systemId
+                                    ptr += 16;
+                                    if ((psshFlags >> 24) & 0xFF) {
+                                        var kids = vBox.getUint32(ptr); ptr += 4;
+                                        // skip kids
+                                        ptr += kids * 16;
+                                    }
+                                    // update pssh box data size
+                                    vBox.setUint32(ptr, vBox.getUint32(ptr) + dLen); ptr += 4;
+                                    // update PR header size
+                                    vBox.setUint32(ptr, vBox.getUint32(ptr, true) + dLen, true); ptr += 4;
+                                    // update PR header record count
+                                    vBox.setUint16(ptr, vBox.getUint16(ptr, true) + 1, true); ptr += 2;
+                                    // append PR record:
+                                    // type = 0x0007, len = customData.length, customData as ASCII
+                                    ptr = initData.byteLength;
+                                    vBox.setUint16(ptr, 0x0007, true); ptr += 2;
+                                    vBox.setUint16(ptr, customData.length, true); ptr += 2;
+                                    for (var c = 0; c < customData.length; ++c)
+                                        vBox.setUint8(ptr++, customData.charCodeAt(c));
+                                    return psshBox;
+                                };
                                 try {
                                     var currentSession = pendingSessions[pendingSessions.length - 1];
-                                    extraData = new Uint8Array(currentSession.customData);
+                                    pendingSessions.pop();
+                                    initData = embedCustomData(initData, currentSession.customData);
                                 } catch (e) {}
-                                if (pendingSessions)
                                 videoElement[api.generateKeyRequest]
-                                        (self.keySystem.systemString, extraData);
+                                        (self.keySystem.systemString, new Uint8Array(initData));
                                 keyRequestSent = true;
                             }
 
@@ -21969,20 +22070,19 @@ MediaPlayer.models.ProtectionModel_01b = function () {
 
             // Determine if creating a new session is allowed
             if (moreSessionsAllowed || sessions.length === 0) {
-
                 var extractCustomData = function(cdmData) {
+                    if (typeof cdmData === "string" || cdmData instanceof String)
+                        return cdmData;
                     var customData = null;
                     try {
                         var cdmStr = String.fromCharCode.apply(null, new Uint16Array(cdmData));
                         var cdmDoc = new DOMParser().parseFromString(cdmStr, "text/xml");
-                        var cdNode = cdmDoc.getElementsByTagName("CustomData")[0];
-                        var cdStr = cdNode.textContent;
-                        var cdBuf = new ArrayBuffer(cdStr.length);
-                        var cdView = new Uint8Array(cdBuf);
-                        for (var i = 0; i < cdStr.length; ++i)
-                            cdView[i] = cdStr.charCodeAt(i);
-                        customData = cdBuf;
-                    } catch (e) {}
+                        var cdStr = cdmDoc.getElementsByTagName("CustomData")[0].textContent;
+                        var cdArr = BASE64.decodeArray(cdStr);
+                        customData = String.fromCharCode.apply(null, new Uint16Array(cdArr.buffer));
+                    } catch (e) {
+                        customData = null;
+                    }
                     return customData;
                 };
 

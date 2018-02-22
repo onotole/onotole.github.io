@@ -188,8 +188,7 @@ GridController = function(streams, tag) {
         _update_stream_info(idx);
         _element(_active).className = "grid_element active";
         _player_state = "stopped";
-        _player.load({url: _streams[_active].url, format: _streams[_active].format});
-        //_player.load({url: _streams[_active].url, protData: {"com.microsoft.playready": {cdmData: "DEADBEEF"}}});
+        _player.load(_streams[_active]);
         _errors.length = 0;
         _video_width = _video_height = _video_bitrate = 0;
         _update_playback_info();
